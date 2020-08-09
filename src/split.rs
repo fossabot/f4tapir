@@ -17,7 +17,7 @@ pub fn split(opts: Split) -> Result<()> {
         return Err(Error::NoInterviews);
     }
 
-    let preferred_output_dir : Option<&Path> = opts.output_directory.as_ref().map(AsRef::as_ref);
+    let preferred_output_dir: Option<&Path> = opts.output_directory.as_ref().map(AsRef::as_ref);
     for path in paths {
         let output_dir = output_directory_or_interview_parent(preferred_output_dir, &path)?;
         split_interview(&path, output_dir)?;
@@ -25,7 +25,10 @@ pub fn split(opts: Split) -> Result<()> {
     Ok(())
 }
 
-fn output_directory_or_interview_parent<'a>(preferred_output_directory: Option<&'a Path>, interview_path: &'a Path) -> Result<Option<&'a Path>> {
+fn output_directory_or_interview_parent<'a>(
+    preferred_output_directory: Option<&'a Path>,
+    interview_path: &'a Path,
+) -> Result<Option<&'a Path>> {
     let output_dir = preferred_output_directory
         .or_else(|| interview_path.parent())
         // parent of a parent-less path seems to be "", but we want None then
@@ -70,7 +73,7 @@ fn split_interview(interview: &Path, output_dir: Option<&Path>) -> Result<()> {
 }
 
 /// Output pattern for use with ffmpeg.
-/// 
+///
 /// Will use the give output directory, if any, otherwise the pattern will
 /// be for a relative path.
 fn segment_pattern(output_directory: Option<&Path>, interview: &Path) -> Result<PathBuf> {
@@ -124,7 +127,9 @@ mod test {
         let preferred_output_dir = None;
         let interview = Path::new("testdata/interview.mp3");
         assert_eq!(
-            output_directory_or_interview_parent(preferred_output_dir, interview).unwrap().unwrap(),
+            output_directory_or_interview_parent(preferred_output_dir, interview)
+                .unwrap()
+                .unwrap(),
             Path::new("testdata")
         );
     }
@@ -133,9 +138,15 @@ mod test {
     fn output_directory_for_interview_without_parent_dir_but_existing_preferred_dir() {
         let preferred_output_dir = Some(Path::new("src"));
         let interview = Path::new("testdata/interview.mp3");
-        assert!(preferred_output_dir.unwrap().is_dir(), "Expected for test that \"{:?}\" is an existing directory", preferred_output_dir);
+        assert!(
+            preferred_output_dir.unwrap().is_dir(),
+            "Expected for test that \"{:?}\" is an existing directory",
+            preferred_output_dir
+        );
         assert_eq!(
-            output_directory_or_interview_parent(preferred_output_dir, interview).unwrap().unwrap(),
+            output_directory_or_interview_parent(preferred_output_dir, interview)
+                .unwrap()
+                .unwrap(),
             Path::new("src")
         );
     }

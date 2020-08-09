@@ -43,7 +43,8 @@ impl<'a> Lines<'a> {
     fn trim_preamble_and_epilogue(line: &str) -> Option<&str> {
         let mut rtf = Rtf::from(line);
 
-        rtf.next().filter(|token| token.kind() == TokenKind::GroupStart)?;
+        rtf.next()
+            .filter(|token| token.kind() == TokenKind::GroupStart)?;
 
         // \f0 or \f1
         rtf.next()
@@ -96,7 +97,8 @@ impl<'a> Lines<'a> {
             .filter(|token| token.as_str() == "\\cf")?;
         rtf.next()
             .filter(|token| token.kind() == TokenKind::Parameter)?;
-        let last_token_of_preamble = rtf.next()
+        let last_token_of_preamble = rtf
+            .next()
             .filter(|token| token.kind() == TokenKind::Delimiter)?;
 
         let content_start = last_token_of_preamble.source().end();
@@ -264,7 +266,7 @@ mod utterance {
             extra_speech_adjust: Timestamp,
         ) -> Result<()>
         where
-            W: Write
+            W: Write,
         {
             write!(&mut to, "{}", LINE_PREAMBLE)?;
             write!(
@@ -276,7 +278,11 @@ mod utterance {
             if !extra_speech.is_empty() {
                 write!(&mut to, " ")?;
             }
-            Timestamp::write_with_adjusted_timestamps(&mut to, extra_speech.trim(), extra_speech_adjust)?;
+            Timestamp::write_with_adjusted_timestamps(
+                &mut to,
+                extra_speech.trim(),
+                extra_speech_adjust,
+            )?;
             write!(&mut to, "{}", self.speech_after)?;
             write!(&mut to, "{}\r\n", LINE_EPILOGUE)?;
             Ok(())
@@ -410,7 +416,7 @@ mod test {
     fn interview_01_even_indexed_lines_are_utterances() {
         // given: test transcript
         let transcript = Transcript::from_file("testdata/interview-01.rtf")
-        .expect("failed to load test transcript file");
+            .expect("failed to load test transcript file");
         let lines = transcript.lines();
 
         // when: getting the second line and then again every second line
@@ -419,18 +425,34 @@ mod test {
             .enumerate()
             .filter_map(|(idx, line)| if (idx & 1) == 1 { Some(line) } else { None })
             .collect();
-        let utterances = even_lines.iter().map(|l| l.utterance().expect("expected all the odd lines to be empty paragraphs, but not all were paragraphs"));
-        let even_indexed_speakers : HashSet<&str> = utterances.clone()
+        let utterances = even_lines.iter().map(|l| {
+            l.utterance().expect(
+                "expected all the odd lines to be empty paragraphs, but not all were paragraphs",
+            )
+        });
+        let even_indexed_speakers: HashSet<&str> = utterances
+            .clone()
             .enumerate()
-            .filter_map(|(idx, line)| if (idx & 1) == 0 { Some(line.speaker()) } else { None })
+            .filter_map(|(idx, line)| {
+                if (idx & 1) == 0 {
+                    Some(line.speaker())
+                } else {
+                    None
+                }
+            })
             .collect();
-        let odd_indexed_speakers : HashSet<&str> = utterances.clone()
-        .enumerate()
-            .filter_map(|(idx, line)| if (idx & 1) == 1 { Some(line.speaker()) } else { None })
+        let odd_indexed_speakers: HashSet<&str> = utterances
+            .clone()
+            .enumerate()
+            .filter_map(|(idx, line)| {
+                if (idx & 1) == 1 {
+                    Some(line.speaker())
+                } else {
+                    None
+                }
+            })
             .collect();
-        let speech : Vec<_> = utterances.clone()
-            .map(Utterance::speech)
-            .collect();
+        let speech: Vec<_> = utterances.clone().map(Utterance::speech).collect();
 
         // then: expect only speaker I on odd indexes,
         //       Z is speaker of the others,
@@ -490,7 +512,7 @@ mod test {
     fn interview_02_odd_indexed_lines_are_utterances() {
         // given: test transcript
         let transcript = Transcript::from_file("testdata/interview-02.rtf")
-        .expect("failed to load test transcript file");
+            .expect("failed to load test transcript file");
         let lines = transcript.lines();
 
         // when: getting the second line and then again every second line
@@ -499,18 +521,34 @@ mod test {
             .enumerate()
             .filter_map(|(idx, line)| if (idx & 1) == 0 { Some(line) } else { None })
             .collect();
-        let utterances = even_lines.iter().map(|l| l.utterance().expect("expected all the odd lines to be empty paragraphs, but not all were paragraphs"));
-        let even_indexed_speakers : HashSet<&str> = utterances.clone()
+        let utterances = even_lines.iter().map(|l| {
+            l.utterance().expect(
+                "expected all the odd lines to be empty paragraphs, but not all were paragraphs",
+            )
+        });
+        let even_indexed_speakers: HashSet<&str> = utterances
+            .clone()
             .enumerate()
-            .filter_map(|(idx, line)| if (idx & 1) == 0 { Some(line.speaker()) } else { None })
+            .filter_map(|(idx, line)| {
+                if (idx & 1) == 0 {
+                    Some(line.speaker())
+                } else {
+                    None
+                }
+            })
             .collect();
-        let odd_indexed_speakers : HashSet<&str> = utterances.clone()
-        .enumerate()
-            .filter_map(|(idx, line)| if (idx & 1) == 1 { Some(line.speaker()) } else { None })
+        let odd_indexed_speakers: HashSet<&str> = utterances
+            .clone()
+            .enumerate()
+            .filter_map(|(idx, line)| {
+                if (idx & 1) == 1 {
+                    Some(line.speaker())
+                } else {
+                    None
+                }
+            })
             .collect();
-        let speech : Vec<_> = utterances.clone()
-            .map(Utterance::speech)
-            .collect();
+        let speech: Vec<_> = utterances.clone().map(Utterance::speech).collect();
 
         // then: expect only speaker I on odd indexes,
         //       Z is speaker of the others,
@@ -539,7 +577,9 @@ mod test {
     }
 
     fn singleton<T>(only_elem: T) -> HashSet<T>
-        where T : Hash + Eq {
+    where
+        T: Hash + Eq,
+    {
         let mut hash = HashSet::new();
         hash.insert(only_elem);
         hash
@@ -549,6 +589,10 @@ mod test {
     fn alternative_preamble_is_accepted() {
         const LINE: &str = "{\\f1 \\fs24 \\ul0 \\b0 \\i0 \\cf0 {\\f1 \\fs24 \\ul0 \\b0 \\i0 \\cf0 I: Mhm. #00:03:10-1#}\\par}";
         let utterance = Lines::parse_line(LINE);
-        assert!(utterance.utterance().is_some(), "Not an utterance: {:?}", utterance);
+        assert!(
+            utterance.utterance().is_some(),
+            "Not an utterance: {:?}",
+            utterance
+        );
     }
 }
