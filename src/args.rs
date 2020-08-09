@@ -44,6 +44,11 @@ pub struct Split {
     #[argh(positional)]
     pub input_files: Vec<PathBuf>,
 
+    /// directory to write the split segments to, default to
+    /// the same directory as the input files
+    #[argh(option, short = 'o')]
+    pub output_directory: Option<PathBuf>,
+
     /// also split sound files in subdirectories
     #[argh(switch, short = 'r')]
     pub recursive: bool,
