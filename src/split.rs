@@ -10,6 +10,10 @@ use thiserror::Error;
 type Result<T> = std::result::Result<T, Error>;
 
 const SEGMENT_TIME: &str = "00:05:00";
+/// acodec to pass to ffmpeg for output
+const SEGMENT_FILE_FORMAT: &str = "mp3";
+/// file extension to use for segments
+const SEGMENT_FILE_EXTENSION: &str = "mp3";
 
 pub fn split(opts: Split) -> Result<()> {
     let paths = collect_interviews(opts.input_files, opts.recursive)?;
@@ -52,12 +56,16 @@ fn split_interview(interview: &Path, output_dir: Option<&Path>) -> Result<()> {
     let args = [
         "-i",
         interview_str,
-        "-c",
-        "copy",
-        "-map",
-        "0",
+        // `-acodec mp3`: convert to mp3, because the timecodes are off for mp4
+        "-acodec",
+        SEGMENT_FILE_FORMAT,
+        // `-vn`: remove all video tracks, as MP4 files and possibly other
+        //        have timecodes with offset that cause problems with F4
+        "-vn",
+        // `-segment_time 05:00:00`: split into 5min segemnts
         "-segment_time",
         SEGMENT_TIME,
+        // pattern for segment filenames
         "-f",
         "segment",
         pattern,
@@ -87,12 +95,8 @@ fn segment_pattern(output_directory: Option<&Path>, interview: &Path) -> Result<
     if let Some(output_directory) = output_directory {
         pattern.push(output_directory);
     }
-
     pattern.push(format!("{}-%03d", interview_stem));
-    if let Some(extension) = interview.extension() {
-        pattern.set_extension(extension);
-    }
-
+    pattern.set_extension(SEGMENT_FILE_EXTENSION);
     Ok(pattern)
 }
 
